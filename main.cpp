@@ -25,7 +25,7 @@ struct edge {
     }
 };
 
-const int desiredLayers = 20;
+const int desiredLayers = 10;
 
 const int maxX = 10+desiredLayers*2;
 const int maxY = desiredLayers+5;
