@@ -25,10 +25,10 @@ struct edge {
     }
 };
 
-const int desiredLayers = 10;
+const int desiredLayers = 30;
 
 const int maxX = 10+desiredLayers*2;
-const int maxY = desiredLayers+5;
+const int maxY = desiredLayers+3;
 const int maxZ = 10+desiredLayers*2;
 
 const int aLength = maxX * maxY *maxZ;
@@ -41,7 +41,7 @@ const int startX = 5;
 const int endX = maxX - 4;
 
 const int startY = 0;
-const int endY = maxY - 4;
+const int endY = maxY - 3;
 
 const int startZ = 5;
 const int endZ = maxZ - 4;
@@ -61,9 +61,9 @@ const int g3 = centerZ;
 
 bool closer(int x1, int x2, int x3, int o1, int o2, int o3){
 
-    int origDist = (x1-g1)+(x2-g2)+(x3-g3);
-    int newDist = (x1+o1-g1)+(x2+o2-g2)+(x3+o3-g3);
-    return abs(origDist) >= abs(newDist);
+    int origDist = abs(x1-g1)+abs(x2-g2)+abs(x3-g3);
+    int newDist = abs(x1+o1-g1)+abs(x2+o2-g2)+abs(x3+o3-g3);
+    return origDist >= newDist;
 }
 
 class PathSearchNode
@@ -142,6 +142,7 @@ float PathSearchNode::GetCost( PathSearchNode &successor )
         }
     }
     
+    
     return cost;
     
 }
@@ -170,9 +171,11 @@ int main( int argc, const char* argv[] )
         
         //too lazy to make a vector3
         vector<edge> adjacents;
-        for(int x = endX-1; x >= startX; x--){
-            for(int y = endY-1; y >= startY; y--){
-                for(int z = endZ-1; z >= startZ; z--){
+        for(int x = startX; x < endX; x++){
+            for(int y = startY; y < endY; y++){
+                for(int z = startZ; z < endZ; z++){
+
+
                     int coutAdjacent = 0;
                     int cout = 0;
                 
@@ -216,6 +219,7 @@ int main( int argc, const char* argv[] )
                         edges[tv].push_back(e);
                         coutAdjacent++;
                     }
+                    
                     
                     //DIAGONAL CORNER DOWN
                     in = flatten(x+1, y-1, z+1);
@@ -627,7 +631,7 @@ int main( int argc, const char* argv[] )
                     }
                     in = flatten(x, y, z+1);
                     if(indices[in]){
-                        if(x+1 == centerX && y == centerY && z ==centerZ){
+                        if(x == centerX && y == centerY && z+1 ==centerZ){
                             edge e(x, y, z+1, 1);
                             edges[tv].push_back(e);
                         }
@@ -639,7 +643,7 @@ int main( int argc, const char* argv[] )
                     }
                     in = flatten(x, y, z-1);
                     if(indices[in]){
-                        if(x+1 == centerX && y == centerY && z ==centerZ){
+                        if(x == centerX && y == centerY && z-1 ==centerZ){
                             edge e(x, y, z-1, 1);
                             edges[tv].push_back(e);
                         }
@@ -658,7 +662,7 @@ int main( int argc, const char* argv[] )
                         cout++;
                     }
                     if(x+1 == centerX && y == centerY && z+1 ==centerZ){
-                        edge e(x-1, y, z-1, 2);
+                        edge e(x+1, y, z+1, 2);
                         edges[tv].push_back(e);
                         cout++;
                     }
@@ -764,6 +768,8 @@ int main( int argc, const char* argv[] )
                     
                     
                     
+                    
+                    
                     if(coutAdjacent + cout >= 1){
                         if(coutAdjacent >= 1 && !indices[flatten(x, y, z)]){
                             edge e(x, y, z, 0);
@@ -801,9 +807,10 @@ int main( int argc, const char* argv[] )
                     minCost = cost;
                     PathSearchNode *start = astarsearch.GetSolutionStart();
                     while(start != NULL){
-                        printf("(%d, %d, %d)\n", start->x, start->y, start->z);
+                        //printf("(%i,%i,%i)\n\n", start->x,start->y,start->z);
                         start = astarsearch.GetSolutionNext();
                     }
+                    printf("\n\n");
                 }
                 edge s(e.x,e.y,e.z,cost);
                 results.push_back(s);
@@ -817,7 +824,33 @@ int main( int argc, const char* argv[] )
                     ff++;
                 }
             }
-        printf("Left of cost %d: %lu\n", minCost, ff++);
+            int money = 1;
+            for(int y = startY; y < endY; y++){
+                int numLayer = 0;
+                printf("\n");
+                for (int z = startZ; z < endZ; z++) {
+                    for (int x = startX; x < endX; x++) {
+                        if(indices[flatten(x,y,z)] == true){
+                            if(x == centerX && y == centerY && z == centerZ){
+                                printf("O");
+                            }
+                            else{
+                                money++;
+                                printf("X");
+                            }
+                            numLayer++;
+                        }
+                        else{
+                            printf("-");
+                        }
+                    }
+                    printf("%i\n", z- startZ);
+                }
+                printf("\n");
+            }
+            printf("%d layers \n", minCost);
+            printf("Costs: %d blocks", money);
+        //printf("Left of cost %d: %lu\n", minCost, ff++);
         if(minCost == desiredLayers){
             
             break;
@@ -830,34 +863,6 @@ int main( int argc, const char* argv[] )
             }
         }
     }
-    int money = 1;
-    for(int y = startY; y < endY; y++){
-        int numLayer = 0;
-        for(int i = 0; i < maxX - 9; i++){
-            printf("%i", i);
-        }
-        printf("\n");
-        for (int z = startZ; z < endZ; z++) {
-            for (int x = startX; x < endX; x++) {
-                if(indices[flatten(x,y,z)] == true){
-                    if(x == centerX && y == centerY && z == centerZ){
-                        printf("O");
-                    }
-                    else{
-                        money++;
-                        printf("X");
-                    }
-                    numLayer++;
-                }
-                else{
-                    printf("-");
-                }
-            }
-            printf("%i\n", z- startZ);
-        }
-        printf("\n");
-    }
-    printf("Costs: %d blocks", money);
     
     return 0;
     
